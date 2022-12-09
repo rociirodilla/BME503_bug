@@ -12,13 +12,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 map_size = 100
-global foodx, foody, food_count, bug_plot, food_plot, sr_plot, sl_plot,outbugx,outbugy,outbugang,outfoodx,outfoody,outsrx,outsry,outslx,outsly, outaggx,outaggy,outsraggx,outsraggy,outslaggx,outslaggy
+global foodx, foody, food_count, bug_plot, food_plot, sr_plot, sl_plot,outbugx,outbugy,outbugang,outfoodx,outfoody,outsrx,outsry,outslx,outsly, outaggx,outaggy,outsraggx,outsraggy,outslaggx,outslaggy, II1, II2,q
 
-duration=4000
+duration=8000
 
 food_count = 0
 foodx=25
 foody=25
+II1 = 120
+II2 = 110
+q=0
 outbugx=np.zeros(int(duration/2))
 outbugy=np.zeros(int(duration/2))
 outbugang=np.zeros(int(duration/2))
@@ -46,22 +49,24 @@ outaggsly = np.zeros(int(duration / 2))
 a = 0.02
 b = 0.2
 c = -65
-d = 2
+d = 0.5
 
 
-I01 =50
-I02 =50
+I01 =25
+I02 =25
 tau_a = 1 *ms
-g_peak = 2
+g_peak = 0.4
 g_synmaxv = g_peak / (tau_a*exp(-1)) * ms
 E_syn = 10
 
 
 tau_a_a = 1 *ms
-g_peak_a = 2
+g_peak_a = 0.4
 g_synmaxv_a = g_peak_a / (tau_a_a*exp(-1)) * ms
 E_syn = 10
 
+A1=TimedArray((1,0),dt=4000*ms)
+A2=TimedArray((0,1),dt=4000*ms)
 
 sensor_eqs = '''
 # equations for neurons
@@ -113,10 +118,9 @@ g_a_syn_a :1
 num_neurons=2
 
 #Winner Take All Circuit with Naka Rushton Rate Neurons
-
 eqs1 = '''
 
-xn=(I2-Iconct):1
+xn=(A1(t)*120 -Iconct):1
 rnakarush=int(xn>0)*((100.0*(xn)**2)/(120**2 + (xn)**2)):1
 dr/dt = (-r + (rnakarush))/(taunr): 1
 taunr:second
@@ -124,20 +128,26 @@ Iconct:1
 I2:1
 '''
 
+eqs2 = '''
 
+xn=(A2(t)*120 -Iconct):1
+rnakarush=int(xn>0)*((100.0*(xn)**2)/(120**2 + (xn)**2)):1
+dr/dt = (-r + (rnakarush))/(taunr): 1
+taunr:second
+Iconct:1
+I2:1
+'''
 
 # Threshold and refractoriness are only used for spike counting
-group1 = NeuronGroup(1, eqs1,clock=Clock(0.2*ms), threshold='r>49', reset='r=49', method='euler')
+group1 = NeuronGroup(1, eqs1,clock=Clock(0.2*ms), threshold='r>=49', reset='r=49', method='euler')
 
 group1.taunr=20.0*ms
-group1.I2=120.0
-group1.r=49
+group1.r=20
 
-group2 = NeuronGroup(1, eqs1,clock=Clock(0.2*ms), threshold='r>=49', reset='r=49', method='euler')
+group2 = NeuronGroup(1, eqs2,clock=Clock(0.2*ms), threshold='r<=5', reset='r=1', method='euler')
 
 group2.taunr=20.0*ms
-group2.I2=119.999
-group2.r=0
+group2.r=20
 
 
 sensor_reset = '''
@@ -238,10 +248,10 @@ sbl2.mag = 0
 # What are the bug equations
 # Equations for velovity in the notes
 
-tau_motor = 0.6 *ms # mine 1*ms #0.25
-base_speed = 0.5 # So it moves without activity
-L = 40*Hz  #Decreasing will make a slower turning when it senses target
-alpha = 0.15 #.2 # 0.25
+tau_motor = 2.5 *ms # mine 1*ms #0.25
+base_speed = 1.5 # So it moves without activity
+L = 35*Hz  #Decreasing will make a slower turning when it senses target
+alpha = 0.05 #.2 # 0.25
 
 
 bug_eqs = '''
@@ -477,12 +487,31 @@ def update_plot(t):
     # print "."
     # pause(0.01)
 
-# ML = StateMonitor(sl, ('v', 'I'), record=True)
+# @network_operation(dt=1000*ms)
+# def update_rate(t):
+#     global II1, II2, q
+#     K1 = [120, 110, 120, 110]
+#     K2 = [110, 120, 110, 120]
+#     II1= K1[q]
+#     II2= K2[q]
+#     q=q+1
+
+ML = StateMonitor(sl, ('v', 'r1', 'I'), record=True)
+ML2 = StateMonitor(sl2, ('v', 'r1', 'I'), record=True)
+MR = StateMonitor(group1, ('r'), record=True)
+MR2 = StateMonitor(group2, ('r'), record=True)
 # MR = StateMonitor(sr, ('v', 'I'), record=True)
 # MRR = StateMonitor(sbr, ('v'), record=True)
 # MLL = StateMonitor(sbl, ('v'), record=True)
 # MB = StateMonitor(bug, ('motorl', 'motorr'), record = True)
 run(duration * ms, report='text')
+figure(1)
+plot(ML.t/ms, ML.v[0])
+plot(ML2.t/ms, ML2.v[0])
+figure(2)
+plot(MR.t/ms, MR.r[0])
+plot(MR2.t/ms, MR2.r[0])
+
 np.save('outbugx', outbugx)
 np.save('outbugy', outbugy)
 np.save('outbugang', outbugang)
