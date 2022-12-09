@@ -9,8 +9,7 @@ This is a temporary script file.
 Created on Thu Oct 27 17:33:41 2022
 @author: rocio
 New bug
-"""
-start_scope()
+#start_scope()
 from brian2 import *
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,7 +32,6 @@ outsry=np.zeros(int(duration/2))
 outslx=np.zeros(int(duration/2))
 outsly=np.zeros(int(duration/2))
 
-
 food_a_count = 0
 foodx2=-50
 foody2=-50
@@ -44,25 +42,25 @@ outaggsry = np.zeros(int(duration / 2))
 outaggslx = np.zeros(int(duration / 2))
 outaggsly = np.zeros(int(duration / 2))
 
-# Sensor neurons
+A1 = TimedArray((0,1),dt=250*ms)
+A2 = TimedArray((1,0),dt=250*ms)
 
+# Sensor neurons
 #Izhikevitch
 a = 0.02
 b = 0.2
 c = -65
-d = 2
+d = 0.5
 
-
-I01 =50
-I02 =50
+I01=100
+I02=100
 tau_a = 1 *ms
-g_peak = 2
+g_peak = 0.4
 g_synmaxv = g_peak / (tau_a*exp(-1)) * ms
 E_syn = 10
 
-
 tau_a_a = 1 *ms
-g_peak_a = 2
+g_peak_a = 0.4
 g_synmaxv_a = g_peak_a / (tau_a_a*exp(-1)) * ms
 E_syn = 10
 
@@ -128,13 +126,13 @@ I2:1
 group1 = NeuronGroup(1, eqs1,clock=Clock(0.2*ms), threshold='r>=49', reset = 'r=49', method='euler')
 
 group1.taunr=20.0*ms
-group1.I2=120.0
+group1.I2=110.0
 group1.r=20
 
 group2 = NeuronGroup(1, eqs1,clock=Clock(0.2*ms), threshold='r<=5', reset = 'r=1', method='euler')
 
 group2.taunr=20.0*ms
-group2.I2=110.0
+group2.I2=120.0
 group2.r=20
 
 
@@ -233,10 +231,10 @@ sbl2.mag = 0
 # What are the bug equations
 # Equations for velovity in the notes
 
-tau_motor = 0.6 *ms # mine 1*ms #0.25
-base_speed = 0.5 # So it moves without activity
-L = 20*Hz  #Decreasing will make a slower turning when it senses target
-alpha = 0.15 #.2 # 0.25
+tau_motor = 2.5 *ms # mine 1*ms #0.25
+base_speed = 1.5 # So it moves without activity
+L = 25*Hz  #Decreasing will make a slower turning when it senses target
+alpha = 0.05 #.2 # 0.25
 
 
 bug_eqs = '''
@@ -366,14 +364,11 @@ syn_ll2=Synapses(sl2, sbr2, clock=Clock(0.2*ms), model='''
 syn_ll2.connect(i=[0],j=[0])
 syn_ll2.g_synmax_a=g_synmaxv_a
 
-
 syn_r2 = Synapses(sbr2, bug, clock=Clock(0.2*ms), on_pre='motorr += we')
 syn_r2.connect(i=[0],j=[0])
 
-
 syn_l2 = Synapses(sbl2, bug, clock=Clock(0.2*ms), on_pre='motorl += we')
 syn_l2.connect(i=[0],j=[0])
-
 
 
 # f = figure(1)
@@ -382,6 +377,8 @@ syn_l2.connect(i=[0],j=[0])
 # sr_plot = plot([0], [0], 'w')   # Just leaving it blank for now
 # sl_plot = plot([0], [0], 'w')
 # Additional update rules (not covered/possible in above eqns)
+
+
 
 @network_operation()
 def update_positions():
@@ -484,10 +481,10 @@ MR2 = StateMonitor(group2, ('r'), record=True)
 #try state monitor M = StateMonitor()
 
 run(duration * ms, report='text')
-figure(1)
-plot(ML.t/ms, ML.v[0])
-figure(2)
-plot(MR2.t/ms, MR2.r[0])
+#figure(1)
+#plot(ML.t/ms, ML.v[0])
+#figure(2)
+#plot(MR2.t/ms, MR2.r[0])
 
 np.save('outbugx', outbugx)
 np.save('outbugy', outbugy)
