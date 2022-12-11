@@ -37,10 +37,10 @@ Fx_a=np.load('outaggx.npy')
 Fy_a=np.load('outaggy.npy')
 
 
-bug_x_coords=np.zeros((500,3))
-bug_y_coords=np.zeros((500,3))
+bug_x_coords=np.zeros((2000,3))
+bug_y_coords=np.zeros((2000,3))
 
-for i in range(0,500):
+for i in range(0,2000):
            # Remove the last bug's position from the figure window
     bug_x_coords[i] = [Ox[i], Ox[i]-4*cos(Ba[i]), Ox[i]-8*cos(Ba[i])]
     bug_y_coords[i] = [Oy[i], Oy[i]-4*sin(Ba[i]), Oy[i]-8*sin(Ba[i])]
@@ -79,7 +79,7 @@ fig = go.Figure(
             y=np.concatenate((bug_y_coords[k],[sry[k], sly[k]], [sr_a_y[k], sl_a_y[k]], [Fy[k]], [Fy_a[k]])),
             mode="markers+markers+markers+markers+markers+markers+markers",
             marker=dict(color=["black","black","black","blue","blue", "red","red", "green", "blue"], size=[10,10,10,8,8,8,8,20,20]))])
-        for k in range(1,500)]
+        for k in range(1,2000)]
                 
                                                    
                        
